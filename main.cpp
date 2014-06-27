@@ -71,10 +71,16 @@ TEST(atc, plane){
     EXPECT_TRUE(ps[4] == atc::position({6, 6, atc::direction::c}));
 }
 TEST(atc, gamemap){
-    atc::game_map gm;
+    atc::game_map gm{10,10};
     atc::position p{1,1,1};
     gm.add_exists(p, 1);
-    EXPECT_EQ(gm.get_exists(2), p);
+    EXPECT_EQ(gm.get_exists(1), p);
+    gm.mark_position(atc::position(5,5,0), 10, 5);
+    EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 9, 5));
+    EXPECT_EQ(false, gm.is_safe(atc::position(4,4), 10, 5));
+    EXPECT_EQ(false, gm.is_safe(atc::position(5,6), 10, 5));
+    EXPECT_EQ(true, gm.is_safe(atc::position(5,7), 10, 5));
+    EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 10, 3));
 }
 
 int main(int argc, char **argv)

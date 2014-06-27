@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <map>
 #include <bitset>
+#include <cstdlib>
 namespace atc{
 struct direction{
 private:
@@ -105,7 +106,7 @@ struct position{
     direction dir{0};
     position(){
     }
-    position(int x_, int y_, direction const & dir_):x{x_},y{y_},dir{dir_}{
+    position(int x_, int y_, direction const & dir_=0):x{x_},y{y_},dir{dir_}{
     }
     position & operator=(const position & o){
         x = o.get_x();
@@ -134,7 +135,9 @@ struct position{
         y += dy;
         return *this;
     }
-
+    friend int get_distance(position const &p1, position const &p2){
+        return std::abs(p1.x - p2.x) + std::abs(p1.y - p2.y);
+    }
 };
 bool operator==(position const & p1, position const & p2){
     return p1.get_dir() == p2.get_dir() &&
@@ -194,31 +197,59 @@ public:
         airports[num] = p;
         return *this;
     }
+    int get_width()const{
+        return width;
+    }
+    int get_height()const{
+        return height;
+    }
     position get_exists(int num){
         auto tmp = exists.find(num);
         assert(tmp != exists.end());
         return tmp->second;
     }
-
     bool is_valid_position(position const &p){
         int x = p.get_x();
         int y = p.get_y();
         return x >= 0 && x < width && y >=0 && y < height;
     }
-
     bool is_valid_altitude(int altitude){
         return altitude >=0 and altitude <= 9;
     }
+    int get_offset(int x, int y){
+        return x + y * width;
+    }
+
     game_map & mark_position(position const &p,int time, int altitude){
         int x = p.get_x();
         int y = p.get_y();
         assert(is_valid_position(p));
         assert(is_valid_altitude(altitude));
-        points[x + y * width][time][altitude] = true;
+        points[get_offset(x,y)][time][altitude] = true;
         return *this;
     }
     game_map & mark_position(plane const &p,int time){
         return mark_position(p.get_position(), time, p.get_altitude());
+    }
+    bool is_safe(position const &p,int time, int altitude){
+        int x = p.get_x();
+        int y = p.get_y();
+        for(int dx=-1;dx<2;++dx){
+            for(int dy=-1;dy<2;++dy){
+                int x_ = x + dx;
+                int y_ = y + dy;
+                if(!is_valid_position(position(x_,y_,0)))
+                    continue;
+                auto ps = points[get_offset(x_,y_)][time];
+                for(int da=-1;da<2;++da){
+                    if(!is_valid_altitude(da + altitude))
+                        continue;
+                    if(ps.test(da + altitude))
+                        return false;
+                }
+            }
+        }
+        return true;
     }
 };
 }
