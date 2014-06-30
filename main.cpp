@@ -4,6 +4,7 @@
 #include "atc.hpp"
 #include "gtest/gtest.h"
 #include "atc-utils.hpp"
+#include "atc_search.hpp"
 #include <queue>
 #include <functional>
 
@@ -107,16 +108,20 @@ planes:{ {plane D3, {position 27, 2, {dir z } }, 7, {dest {position 20, 15, {dir
      EXPECT_EQ(out.str(), output);
 }
 
-TEST(atc, priority_queue){
-    std::priority_queue<double, std::vector<double>, std::greater<double>> a;
-    a.push(1.0);
-    a.push(1.1);
-    a.push(0.9);
+TEST(atc, search){
+    std::priority_queue<atc_search::search_node, std::vector<atc_search::search_node>, std::greater<atc_search::search_node>> a;
+    atc_search::search_node node{};
+    node.score = 1.0;
+    a.push(node);
+    node.score = 1.1;
+    a.push(node);
+    node.score = 0.9;
+    a.push(node);
     std::ostringstream out;
     while(!a.empty()){
         auto e = a.top();
         a.pop();
-        out << e << ", ";
+        out << e.score << ", ";
     }
     EXPECT_EQ(out.str(), "0.9, 1, 1.1, ");
 }

@@ -12,4 +12,4 @@ LIBS += -L. -lgtest
 HEADERS += \
     atc.hpp \
     atc-utils.hpp \
-    atc_search.h
+    atc_search.hpp
