@@ -9,6 +9,7 @@
 #include <map>
 #include <bitset>
 #include <cstdlib>
+#include <utility>
 namespace atc{
 struct direction{
 private:
@@ -96,6 +97,32 @@ public:
         }
         return std::make_pair(dx, dy);
     }
+    friend std::ostream & operator<< (std::ostream & out, direction const & dir){
+        char c;
+        switch(dir.code){
+        case direction::w:
+            c = 'w';break;
+        case direction::e:
+            c = 'e';break;
+        case direction::d:
+            c = 'd';break;
+        case direction::c:
+            c = 'c';break;
+        case direction::x:
+            c = 'x';break;
+        case direction::z:
+            c = 'z';break;
+        case direction::a:
+            c = 'a';break;
+        case direction::q:
+            c = 'q';break;
+        default:
+            c = '*';
+            break;
+        }
+        out << "{dir "<< c << " }";
+        return out;
+    }
 };
 bool operator==(direction const &a, direction const &b){
     return direction::is_same_direction(a, b);
@@ -138,11 +165,41 @@ struct position{
     friend int get_distance(position const &p1, position const &p2){
         return std::abs(p1.x - p2.x) + std::abs(p1.y - p2.y);
     }
+    friend std::ostream & operator<<(std::ostream & out, position const & pos){
+        out << "{position " << pos.x << ", " << pos.y << ", " << pos.dir << " }";
+        return out;
+    }
 };
 bool operator==(position const & p1, position const & p2){
     return p1.get_dir() == p2.get_dir() &&
             p1.get_x() == p2.get_x() &&
             p1.get_y() == p2.get_y();
+}
+struct dest{
+    atc::position pos{};
+    enum dest_type {exit=2,airport=3};
+    dest_type dest_type_{};
+    int dest_no{};
+    dest(){}
+    dest(position pos_, dest_type dest_type__, int dest_no_):pos{pos_},dest_type_{dest_type__},dest_no{dest_no_}{}
+    friend std::ostream & operator<< (std::ostream & out, dest const & dest_){
+        out << "{dest " << dest_.pos << ", ";
+        switch(dest_.dest_type_){
+        case dest::exit:
+            out << "exit(";break;
+        case dest::airport:
+            out << "airport(";break;
+        default:
+            out << "unknow(";break;
+        }
+        out << dest_.dest_no << ") }";
+        return out;
+    }
+};
+bool operator==(dest const &d1, dest const &d2){
+    return d1.pos == d2.pos &&
+            d1.dest_type_ == d2.dest_type_ &&
+            d1.dest_no == d2.dest_no;
 }
 
 class plane{
@@ -150,13 +207,26 @@ class plane{
     bool is_jet{0};
     int num{};
     int altitude;
+    dest dest_;
 public:
-    plane(position const &pos_,bool is_jet_,int num_, int altitude_):pos{pos_},is_jet{is_jet_},num{num_}, altitude{altitude_}{
+    plane(){}
+    plane(position const &pos_,bool is_jet_,int num_, int altitude_, dest dest__):pos{pos_},is_jet{is_jet_},num{num_}, altitude{altitude_}, dest_{dest__}{
     }
+    plane(plane const & plane_):pos{plane_.pos},is_jet{plane_.is_jet},num{plane_.num},altitude{plane_.altitude},dest_{plane_.dest_}{
+    }
+
+    plane & operator=(plane const & plane_){
+        pos = plane_.pos;
+        is_jet = plane_.is_jet;
+        num = plane_.num;
+        altitude = plane_.altitude;
+        dest_ = plane_.dest_;
+        return *this;
+    }
+
     position get_position()const{
         return pos;
     }
-    plane(plane const &p):pos{p.get_position()}{}
     std::vector<position> get_next_positions(){
         std::vector<position> ps;
         position p(pos);
@@ -180,34 +250,85 @@ public:
     int get_altitude()const{
         return altitude;
     }
+    friend std::ostream & operator<< (std::ostream & out, plane const &p){
+        out << "{plane ";
+        char c;
+        if(p.is_jet)
+            c = 'a';
+        else
+            c = 'A';
+        out << static_cast<char>((p.num - 0) + c) << p.num << ", " << p.pos << ", " << p.altitude << ", ";
+        out << p.dest_ << " }";
+        return out;
+    }
 };
 class game_map{
     int width{0},height{0};
-    std::unordered_map<int, position> exists;
-    std::unordered_map<int, position> airports;
+    std::unordered_map<int, dest> exits;
+    std::unordered_map<int, dest> airports;
     std::unordered_map<int, std::map<int, std::bitset<10>>> points;
+    std::unordered_map<int, plane> planes;
 public:
     game_map(){}
     game_map(int width_, int height_):width{width_},height{height_}{}
-    game_map & add_exists(position const & p,int num){
-        exists[num] = p;
+    game_map(game_map const &)=delete;
+    game_map(game_map && gm):width{gm.width}, height{gm.height},exits{std::move(gm.exits)},airports{std::move(gm.airports)},points{std::move(gm.points)},planes{std::move(gm.planes)}{
+    }
+
+    game_map & operator=(game_map &&gm){
+        width = gm.width;
+        height = gm.height;
+        exits = std::move(gm.exits);
+        airports = std::move(gm.airports);
+        planes = std::move(gm.planes);
+        points = std::move(gm.points);
         return *this;
     }
-    game_map & add_airport(position const &p, int num){
-        airports[num] = p;
+
+    game_map & add(dest const & dest_){
+        if(dest_.dest_type_ == dest::airport){
+            return add_airport(dest_);
+        }else if(dest_.dest_type_ == dest::exit){
+            return add_exit(dest_);
+        }else{
+            assert(dest_.dest_type_ == dest::airport ||
+                   dest_.dest_type_ == dest::exit);
+        }
         return *this;
     }
+
+    game_map & add_exit(dest const & dest_){
+        assert(dest_.dest_type_ == dest::exit);
+        exits[dest_.dest_no] = dest_;
+        return *this;
+    }
+    game_map & add_airport(dest const &dest){
+        assert(dest.dest_type_ == dest::airport);
+        airports[dest.dest_no] = dest;
+        return *this;
+    }
+    game_map & add_plane(plane const &plane_){
+        planes[plane_.get_no()] = plane_;
+        return *this;
+    }
+
     int get_width()const{
         return width;
     }
     int get_height()const{
         return height;
     }
-    position get_exists(int num){
-        auto tmp = exists.find(num);
-        assert(tmp != exists.end());
+    dest get_exit(int num){
+        auto tmp = exits.find(num);
+        assert(tmp != exits.end());
         return tmp->second;
     }
+    dest get_airport(int num){
+        auto tmp = airports.find(num);
+        assert(tmp != airports.end());
+        return tmp->second;
+    }
+
     bool is_valid_position(position const &p){
         int x = p.get_x();
         int y = p.get_y();
@@ -250,6 +371,23 @@ public:
             }
         }
         return true;
+    }
+    friend std::ostream & operator<< (std::ostream & out, game_map const & map){
+        out << "{map " << map.width << "x" << map.height << ",\n";
+        out << "exits:{ ";
+        for(auto pair:map.exits){
+            out << pair.second << ", ";
+        }
+        out << " },\nairports:{ ";
+        for(auto pair :map.airports){
+            out << pair.second << ", ";
+        }
+        out << " },\nplanes:{ ";
+        for(auto pair :map.planes){
+            out << pair.second << ", ";
+        }
+        out << " } }";
+        return out;
     }
 };
 }

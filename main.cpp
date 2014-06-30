@@ -3,6 +3,7 @@
 #include "rapidjson/document.h"
 #include "atc.hpp"
 #include "gtest/gtest.h"
+#include "atc-utils.hpp"
 
 using namespace std;
 TEST(atc, direction) {
@@ -62,7 +63,8 @@ TEST(atc, position){
     EXPECT_TRUE(p7 == p8);
 }
 TEST(atc, plane){
-    atc::plane p({5,5,atc::direction::d}, 0, 0, 3);
+    atc::dest dest_{atc::position{0,0,3}, atc::dest::airport, 0};
+    atc::plane p({5,5,atc::direction::d}, 0, 0, 3, dest_);
     auto ps = p.get_next_positions();
     EXPECT_TRUE(ps[0] == atc::position({6, 5, atc::direction::d}));
     EXPECT_TRUE(ps[1] == atc::position({5, 4, atc::direction::w}));
@@ -70,11 +72,16 @@ TEST(atc, plane){
     EXPECT_TRUE(ps[3] == atc::position({6, 4, atc::direction::e}));
     EXPECT_TRUE(ps[4] == atc::position({6, 6, atc::direction::c}));
 }
+TEST(atc, dest){
+    atc::dest dest_{atc::position{0,0,3}, atc::dest::airport, 0};
+    assert(dest_ == dest_);
+}
+
 TEST(atc, gamemap){
     atc::game_map gm{10,10};
-    atc::position p{1,1,1};
-    gm.add_exists(p, 1);
-    EXPECT_EQ(gm.get_exists(1), p);
+    atc::dest d{{1,1,1}, atc::dest::exit, 0};
+    gm.add_exit(d);
+    EXPECT_EQ(gm.get_exit(0), d);
     gm.mark_position(atc::position(5,5,0), 10, 5);
     EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 9, 5));
     EXPECT_EQ(false, gm.is_safe(atc::position(4,4), 10, 5));
@@ -85,9 +92,11 @@ TEST(atc, gamemap){
 
 int main(int argc, char **argv)
 {
+    std::string data = R"json({"update_time": 1403772825.5098014, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n31\n0 0 24 5 7 7 2 36 1\n1 0 12 14 7 1 2 37 4\n2 1 10 13 7 0 3 41 2\n3 0 27 2 7 0 3 49 5\n\n"})json";
+    atc_utils::frame rv = atc_utils::read_status(data);
+    std::cout << rv;
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-    std::string data = R"json({"update_time": 1403772119.0692184, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n49\n0 1 8 7 7 5 2 2 6\n1 0 3 3 7 4 2 48 3\n\n"})json";
     rapidjson::Document doc;
     doc.Parse<0>(data.c_str());
     cout << doc["update_time"].GetDouble() << "\n";
