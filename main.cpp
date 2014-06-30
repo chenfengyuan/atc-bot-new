@@ -90,21 +90,24 @@ TEST(atc, gamemap){
     EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 10, 3));
 }
 
-int main(int argc, char **argv)
-{
+TEST(atc, read_status){
     std::string data = R"json({"update_time": 1403772825.5098014, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n31\n0 0 24 5 7 7 2 36 1\n1 0 12 14 7 1 2 37 4\n2 1 10 13 7 0 3 41 2\n3 0 27 2 7 0 3 49 5\n\n"})json";
     atc_utils::frame rv = atc_utils::read_status(data);
-    std::cout << rv;
+    std::ostringstream out;
+    out << rv;
+    std::string output=R"foo(update_time : 1.40377e+09
+clck : 31
+{map 30x21,
+exits:{ {dest {position 0, 0, {dir c } }, exit(7) }, {dest {position 0, 7, {dir d } }, exit(6) }, {dest {position 0, 13, {dir d } }, exit(5) }, {dest {position 9, 20, {dir e } }, exit(4) }, {dest {position 29, 17, {dir a } }, exit(3) }, {dest {position 29, 7, {dir a } }, exit(2) }, {dest {position 29, 0, {dir z } }, exit(1) }, {dest {position 12, 0, {dir x } }, exit(0) },  },
+airports:{ {dest {position 20, 18, {dir d } }, airport(1) }, {dest {position 20, 15, {dir w } }, airport(0) },  },
+planes:{ {plane D3, {position 27, 2, {dir z } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane c2, {position 10, 13, {dir d } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane B1, {position 12, 14, {dir x } }, 7, {dest {position 29, 0, {dir z } }, exit(1) } }, {plane A0, {position 24, 5, {dir e } }, 7, {dest {position 0, 0, {dir c } }, exit(7) } },  } }
+)foo";
+     EXPECT_EQ(out.str(), output);
+}
+
+int main(int argc, char **argv)
+{
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-    rapidjson::Document doc;
-    doc.Parse<0>(data.c_str());
-    cout << doc["update_time"].GetDouble() << "\n";
-    cout << doc["data"].GetString() << "\n";
-    cout << data << endl;
-    atc::direction d1(3);
-    atc::direction d2(3);
-    std::cout << (d1 == d2.get_contary_direction() ) << "\n";
-    return 0;
 }
 
