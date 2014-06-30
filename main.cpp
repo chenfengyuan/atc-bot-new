@@ -4,6 +4,8 @@
 #include "atc.hpp"
 #include "gtest/gtest.h"
 #include "atc-utils.hpp"
+#include <queue>
+#include <functional>
 
 using namespace std;
 TEST(atc, direction) {
@@ -103,6 +105,20 @@ airports:{ {dest {position 20, 18, {dir d } }, airport(1) }, {dest {position 20,
 planes:{ {plane D3, {position 27, 2, {dir z } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane c2, {position 10, 13, {dir d } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane B1, {position 12, 14, {dir x } }, 7, {dest {position 29, 0, {dir z } }, exit(1) } }, {plane A0, {position 24, 5, {dir e } }, 7, {dest {position 0, 0, {dir c } }, exit(7) } },  } }
 )foo";
      EXPECT_EQ(out.str(), output);
+}
+
+TEST(atc, priority_queue){
+    std::priority_queue<double, std::vector<double>, std::greater<double>> a;
+    a.push(1.0);
+    a.push(1.1);
+    a.push(0.9);
+    std::ostringstream out;
+    while(!a.empty()){
+        auto e = a.top();
+        a.pop();
+        out << e << ", ";
+    }
+    EXPECT_EQ(out.str(), "0.9, 1, 1.1, ");
 }
 
 int main(int argc, char **argv)
