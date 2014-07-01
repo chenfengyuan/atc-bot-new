@@ -134,8 +134,19 @@ std::ostream & operator<<(std::ostream & out, search_node const & sn){
 bool operator< (search_node const & n1, search_node const & n2){
     return n1.score > n2.score;
 }
-struct search_result{
+struct result_node{
+    atc::position pos;
+    int altitude;
+    int clck;
+    result_node(search_node const & sn):pos{sn.pos}, altitude{sn.altitude}, clck{sn.clck}{
+    }
 };
+std::ostream & operator<<(std::ostream & out, result_node const & rn){
+    out << "{ " << rn.pos << " " << rn.altitude  << " " << rn.clck << " }";
+    return out;
+}
+
+typedef std::unordered_map<int, std::vector<result_node>> search_result;
 search_result search(atc_utils::frame & f){
     auto & map = f.map;
     search_result rv;
@@ -168,15 +179,21 @@ search_result search(atc_utils::frame & f){
                     nn.score += 0.001;
                     nn.distince += 0.001;
                 }
-                std::cout << nn << "\n";
                 ns.push(nn);
                 ns_record[nn.id] = nn;
                 if(nn.is_finished(dest)){
-                    std::cout << nn << " finished\n";
+                    std::vector<result_node> rns;
+                    while(true){
+                        rns.push_back(nn);
+                        if(nn.id == nn.parent_id)
+                            break;
+                        nn = ns_record[nn.parent_id];
+                    }
+                    std::reverse(rns.begin(), rns.end());
+                    rv[plane.get_no()] = std::move(rns);
                     return rv;
                 }
             }
-            std::cout << "\n";
         }
     }
     return rv;
