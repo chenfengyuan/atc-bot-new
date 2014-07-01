@@ -138,6 +138,7 @@ struct result_node{
     atc::position pos;
     int altitude;
     int clck;
+    result_node(){}
     result_node(search_node const & sn):pos{sn.pos}, altitude{sn.altitude}, clck{sn.clck}{
     }
 };
@@ -146,13 +147,13 @@ std::ostream & operator<<(std::ostream & out, result_node const & rn){
     return out;
 }
 
-typedef std::unordered_map<int, std::vector<result_node>> search_result;
+typedef std::map<int, std::map<int, result_node>> search_result;
 search_result search(atc_utils::frame & f){
     auto & map = f.map;
     search_result rv;
-    std::priority_queue<search_node> ns;
-    std::unordered_map<int, search_node> ns_record;
     for(auto const & pair:map.get_planes()){
+        std::priority_queue<search_node> ns;
+        std::unordered_map<int, search_node> ns_record;
         atc::plane const &plane = pair.second;
         search_node n{plane, f.clck};
         atc::dest dest = plane.get_dest();
@@ -161,7 +162,6 @@ search_result search(atc_utils::frame & f){
         ns_record[n.id] = n;
         while(!ns.empty()){
             search_node n = ns.top();
-            //std::cout << n << "\n";
             ns.pop();
             for(search_node  nn  : n.get_next_nodes()){
                 if(nn.is_valid_altitude(dest) and nn.is_valid_position(map, dest))
@@ -182,19 +182,20 @@ search_result search(atc_utils::frame & f){
                 ns.push(nn);
                 ns_record[nn.id] = nn;
                 if(nn.is_finished(dest)){
-                    std::vector<result_node> rns;
+                    search_result::value_type::second_type rns;
                     while(true){
-                        rns.push_back(nn);
+                        rns[nn.clck] = nn;
+                        map.mark_position(nn.pos, nn.clck, nn.altitude);
                         if(nn.id == nn.parent_id)
                             break;
                         nn = ns_record[nn.parent_id];
                     }
-                    std::reverse(rns.begin(), rns.end());
                     rv[plane.get_no()] = std::move(rns);
-                    return rv;
+                    goto finded;
                 }
             }
         }
+        finded:;
     }
     return rv;
 }

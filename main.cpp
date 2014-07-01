@@ -137,13 +137,14 @@ TEST(atc, search_node){
     EXPECT_EQ(node1.heuristic_estimate, 7);
 }
 TEST(atc, search){
-    const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n\n"})json";
+    const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n1 0 12 5 9 1 2 50 5\n\n"})json";
     atc_utils::frame fm = atc_utils::read_status(data);
     fm.map.mark_position(atc::position(26,3,0),31,7);
     std::cout << fm;
     for(auto & pair : atc_search::search(fm)){
-        for(auto & rn : pair.second){
-            std::cout << rn << "\n";
+        std::cout << pair.first << "\n";
+        for(auto & pair2 : pair.second){
+            std::cout << pair2.second << "\n";
         }
     }
 }
