@@ -157,6 +157,8 @@ search_result search(atc_utils::frame & f){
                     ;
                 else
                     continue;
+                if(!map.is_safe(nn.pos, nn.clck, nn.altitude))
+                    continue;
                 nn.calculate_heuristic_estimate(dest).calculate_score();
                 if(!(nn.pos.dir == n.pos.dir)){
                     nn.score += 0.01;

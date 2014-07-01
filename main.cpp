@@ -139,6 +139,7 @@ TEST(atc, search_node){
 TEST(atc, search){
     const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n\n"})json";
     atc_utils::frame rv = atc_utils::read_status(data);
+    rv.map.mark_position(atc::position(26,3,0),31,7);
     std::cout << rv;
     atc_search::search(rv);
 }
