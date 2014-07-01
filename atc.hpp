@@ -10,6 +10,7 @@
 #include <bitset>
 #include <cstdlib>
 #include <utility>
+#include <functional>
 namespace atc{
 struct direction{
 private:
@@ -154,7 +155,6 @@ struct position{
 
     position(position const & o):x{o.get_x()},y{o.get_y()},dir{o.get_dir()}{
     }
-
     position & move(){
         int dx, dy;
         std::tie(dx, dy) = dir.get_position_delta();
@@ -162,6 +162,14 @@ struct position{
         y += dy;
         return *this;
     }
+    position & unmove(){
+        int dx, dy;
+        std::tie(dx, dy) = dir.get_contary_direction().get_position_delta();
+        x += dx;
+        y += dy;
+        return *this;
+    }
+
     friend int get_distance(position const &p1, position const &p2){
         return std::abs(p1.x - p2.x) + std::abs(p1.y - p2.y);
     }
@@ -195,6 +203,11 @@ struct dest{
         out << dest_.dest_no << ") }";
         return out;
     }
+    atc::position get_in_position()const{
+        atc::position pos = this->pos;
+        pos.unmove();
+        return pos;
+    }
 };
 bool operator==(dest const &d1, dest const &d2){
     return d1.pos == d2.pos &&
@@ -208,11 +221,12 @@ class plane{
     int num{};
     int altitude;
     dest dest_;
+    int fuel;
 public:
     plane(){}
-    plane(position const &pos_,bool is_jet_,int num_, int altitude_, dest dest__):pos{pos_},is_jet{is_jet_},num{num_}, altitude{altitude_}, dest_{dest__}{
+    plane(position const &pos_,bool is_jet_,int num_, int altitude_, dest dest__, int fuel_):pos{pos_},is_jet{is_jet_},num{num_}, altitude{altitude_}, dest_{dest__}, fuel{fuel_}{
     }
-    plane(plane const & plane_):pos{plane_.pos},is_jet{plane_.is_jet},num{plane_.num},altitude{plane_.altitude},dest_{plane_.dest_}{
+    plane(plane const & plane_):pos{plane_.pos},is_jet{plane_.is_jet},num{plane_.num},altitude{plane_.altitude},dest_{plane_.dest_},fuel{plane_.fuel}{
     }
 
     plane & operator=(plane const & plane_){
@@ -221,11 +235,18 @@ public:
         num = plane_.num;
         altitude = plane_.altitude;
         dest_ = plane_.dest_;
+        fuel = plane_.fuel;
         return *this;
     }
 
     position get_position()const{
         return pos;
+    }
+    dest get_dest() const{
+        return dest_;
+    }
+    int get_fuel() const{
+        return fuel;
     }
     std::vector<position> get_next_positions(){
         std::vector<position> ps;
@@ -241,7 +262,7 @@ public:
         }
         return ps;
     }
-    bool is_jet_plane(){
+    bool is_jet_plane() const{
         return is_jet;
     }
     int get_no() const{
@@ -257,8 +278,8 @@ public:
             c = 'a';
         else
             c = 'A';
-        out << static_cast<char>((p.num - 0) + c) << p.num << ", " << p.pos << ", " << p.altitude << ", ";
-        out << p.dest_ << " }";
+        out << static_cast<char>((p.num - 0) + c) << p.altitude << ", " << p.pos << ", ";
+        out << p.dest_ << ", " << p.fuel <<" }";
         return out;
     }
 };
@@ -328,6 +349,9 @@ public:
         assert(tmp != airports.end());
         return tmp->second;
     }
+    auto get_points() ->decltype(points)&{
+        return points;
+    }
 
     bool is_valid_position(position const &p){
         int x = p.get_x();
@@ -388,6 +412,9 @@ public:
         }
         out << " } }";
         return out;
+    }
+    std::unordered_map<int, atc::plane> const & get_planes() const{
+        return planes;
     }
 };
 }

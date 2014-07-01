@@ -67,7 +67,7 @@ TEST(atc, position){
 }
 TEST(atc, plane){
     atc::dest dest_{atc::position{0,0,3}, atc::dest::airport, 0};
-    atc::plane p({5,5,atc::direction::d}, 0, 0, 3, dest_);
+    atc::plane p({5,5,atc::direction::d}, 0, 0, 3, dest_, 100);
     auto ps = p.get_next_positions();
     EXPECT_TRUE(ps[0] == atc::position({6, 5, atc::direction::d}));
     EXPECT_TRUE(ps[1] == atc::position({5, 4, atc::direction::w}));
@@ -98,19 +98,13 @@ TEST(atc, read_status){
     atc_utils::frame rv = atc_utils::read_status(data);
     std::ostringstream out;
     out << rv;
-    std::string output=R"foo(update_time : 1.40377e+09
-clck : 31
-{map 30x21,
-exits:{ {dest {position 0, 0, {dir c } }, exit(7) }, {dest {position 0, 7, {dir d } }, exit(6) }, {dest {position 0, 13, {dir d } }, exit(5) }, {dest {position 9, 20, {dir e } }, exit(4) }, {dest {position 29, 17, {dir a } }, exit(3) }, {dest {position 29, 7, {dir a } }, exit(2) }, {dest {position 29, 0, {dir z } }, exit(1) }, {dest {position 12, 0, {dir x } }, exit(0) },  },
-airports:{ {dest {position 20, 18, {dir d } }, airport(1) }, {dest {position 20, 15, {dir w } }, airport(0) },  },
-planes:{ {plane D3, {position 27, 2, {dir z } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane c2, {position 10, 13, {dir d } }, 7, {dest {position 20, 15, {dir w } }, airport(0) } }, {plane B1, {position 12, 14, {dir x } }, 7, {dest {position 29, 0, {dir z } }, exit(1) } }, {plane A0, {position 24, 5, {dir e } }, 7, {dest {position 0, 0, {dir c } }, exit(7) } },  } }
-)foo";
-     EXPECT_EQ(out.str(), output);
+    char const * output = "update_time : 1.40377e+09\nclck : 31\n{map 30x21,\nexits:{ {dest {position 0, 0, {dir c } }, exit(7) }, {dest {position 0, 7, {dir d } }, exit(6) }, {dest {position 0, 13, {dir d } }, exit(5) }, {dest {position 9, 20, {dir e } }, exit(4) }, {dest {position 29, 17, {dir a } }, exit(3) }, {dest {position 29, 7, {dir a } }, exit(2) }, {dest {position 29, 0, {dir z } }, exit(1) }, {dest {position 12, 0, {dir x } }, exit(0) },  },\nairports:{ {dest {position 20, 18, {dir d } }, airport(1) }, {dest {position 20, 15, {dir w } }, airport(0) },  },\nplanes:{ {plane D7, {position 27, 2, {dir z } }, {dest {position 20, 15, {dir w } }, airport(0) }, 49 }, {plane c7, {position 10, 13, {dir d } }, {dest {position 20, 15, {dir w } }, airport(0) }, 41 }, {plane B7, {position 12, 14, {dir x } }, {dest {position 29, 0, {dir z } }, exit(1) }, 37 }, {plane A7, {position 24, 5, {dir e } }, {dest {position 0, 0, {dir c } }, exit(7) }, 36 },  } }\n";
+    EXPECT_EQ(output, out.str());
 }
 
-TEST(atc, search){
-    std::priority_queue<atc_search::search_node, std::vector<atc_search::search_node>, std::greater<atc_search::search_node>> a;
-    atc_search::search_node node{};
+TEST(atc, search_node){
+    std::priority_queue<atc_search::search_node> a;
+    atc_search::search_node node{atc::plane(), 0};
     node.score = 1.0;
     a.push(node);
     node.score = 1.1;
@@ -124,6 +118,29 @@ TEST(atc, search){
         out << e.score << ", ";
     }
     EXPECT_EQ(out.str(), "0.9, 1, 1.1, ");
+
+    atc::dest exit0(atc::position(5,5,atc::direction::w), atc::dest::exit, 0);
+    atc::dest airport0(atc::position(5,5,atc::direction::w), atc::dest::airport, 0);
+    atc_search::search_node node0(atc::plane(atc::position(5,5, atc::direction::c), 1, 0, 2, airport0, 100), 0);
+    node0.calculate_heuristic_estimate(airport0);
+    EXPECT_EQ(node0.is_finished(airport0), false);
+    EXPECT_EQ(node0.heuristic_estimate, 4);
+    node0.calculate_heuristic_estimate(exit0);
+    EXPECT_EQ(node0.is_finished(exit0), false);
+    EXPECT_EQ(node0.heuristic_estimate, 7);
+    atc_search::search_node node1(atc::plane(atc::position(0,0, atc::direction::c), 1, 0, 2, airport0, 100), 0);
+    node1.calculate_heuristic_estimate(airport0);
+    EXPECT_EQ(node1.is_finished(airport0), false);
+    EXPECT_EQ(node1.heuristic_estimate, 5);
+    node1.calculate_heuristic_estimate(exit0);
+    EXPECT_EQ(node1.is_finished(exit0), false);
+    EXPECT_EQ(node1.heuristic_estimate, 7);
+}
+TEST(atc, search){
+    const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n\n"})json";
+    atc_utils::frame rv = atc_utils::read_status(data);
+    std::cout << rv;
+    atc_search::search(rv);
 }
 
 int main(int argc, char **argv)

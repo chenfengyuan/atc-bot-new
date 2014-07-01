@@ -66,7 +66,7 @@ frame read_status(std::string raw){
                 assert(dest_type == atc::dest::airport||
                         dest_type == atc::dest::exit);
             }
-            atc::plane p(atc::position(x,y,dir),type,no,altitude,dest_);
+            atc::plane p(atc::position(x,y,dir),type,no,altitude,dest_,fuel);
             map.add_plane(std::move(p));
         }catch(const std::ios_base::failure&){
             break;
