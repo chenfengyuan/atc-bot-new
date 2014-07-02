@@ -131,14 +131,17 @@ TEST(atc, search_node){
     atc_search::search_node node1(atc::plane(atc::position(0,0, atc::direction::c), 1, 0, 2, airport0, 100), 0);
     node1.calculate_heuristic_estimate(airport0);
     EXPECT_EQ(node1.is_finished(airport0), false);
-    EXPECT_EQ(node1.heuristic_estimate, 5);
+    EXPECT_EQ(node1.heuristic_estimate, 7);
     node1.calculate_heuristic_estimate(exit0);
     EXPECT_EQ(node1.is_finished(exit0), false);
     EXPECT_EQ(node1.heuristic_estimate, 7);
 }
 TEST(atc, search){
     const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n1 0 12 5 9 1 2 50 5\n\n"})json";
-    data = R"json({"update_time": 1404280870.7023425, "data": "30 21 1\n4 29 7 6 29 17 6 0 7 2 0 0 3 \n1 20 18 2 \n69\n6 0 28 16 8 1 2 23 3\n12 1 1 7 8 2 2 23 6\n\n"})json";
+    // two plane aiport
+    data = R"json({"update_time": 1404293195.5471077, "data": "30 21 1\n4 29 7 6 29 17 6 0 7 2 0 0 3 \n1 20 18 2 \n3337\n11 0 27 17 7 0 3 49 6\n13 1 29 7 7 0 3 51 6\n\n"})json";
+    data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 6 7 2 3 45 4\n1 0 23 4 0 2 3 51 6\n\n"})json";
+    data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 8 1 2 3 45 2\n\n"})json";
     atc_utils::frame fm = atc_utils::read_status(data);
     fm.map.mark_position(atc::position(20,15,0),22,1);
     std::cout << fm;

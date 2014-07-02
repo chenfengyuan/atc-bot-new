@@ -60,6 +60,9 @@ public:
     direction get_contary_direction() const{
         return direction((code+ 4)%8);
     }
+    int static direction_distance(direction const &a, direction const &b){
+        return std::min(std::abs(a.get_code() - b.get_code()), std::abs(a.get_code() + 8 - b.get_code()));
+    }
 
     bool static is_contary_direction(direction const &a, direction const &b){
         return is_same_direction(a.get_contary_direction(), b);
@@ -356,6 +359,10 @@ public:
     }
     game_map & add_plane(plane const &plane_){
         planes[plane_.get_no()] = plane_;
+        return *this;
+    }
+    game_map & del_plane(int no){
+        planes.erase(no);
         return *this;
     }
 

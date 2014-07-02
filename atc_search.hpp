@@ -40,15 +40,58 @@ struct search_node{
     }
 
     search_node & calculate_heuristic_estimate(atc::dest const & dest){
-        if(pos.x == dest.pos.x && pos.y == dest.pos.y && ! is_finished(dest)){
-            heuristic_estimate = 4;
-        }else{
-            heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x), std::abs(pos.y - dest.pos.y));
-        }
         if(dest.airport == dest.dest_type_){
+            //heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x), std::abs(pos.y - dest.pos.y));
+            atc::position pos1 = dest.pos;
+            pos1.dir = pos1.dir.get_contary_direction();
+            if(pos1.x == pos.x and pos1.y == pos.y){
+                heuristic_estimate = 4;
+                goto DONE_GUESSING;
+            }
+            pos1.move();
+            if(pos.x == pos1.x and pos.y == pos1.y and atc::direction::direction_distance(pos.dir, pos1.dir)>2){
+                heuristic_estimate = 5;
+                goto DONE_GUESSING;
+            }
+            if((pos.x == dest.pos.x) && std::abs(pos.y - dest.pos.y) == 1){
+                if(atc::direction::direction_distance(pos.dir, dest.pos.dir) >= 2)
+                    heuristic_estimate = 4;
+                else if(atc::direction::direction_distance(pos.dir, dest.pos.dir) == 1)
+                    heuristic_estimate = 4;
+                else
+                    heuristic_estimate = 5;
+                goto DONE_GUESSING;
+            }
+
+            heuristic_estimate = std::max(std::abs(pos.x - pos1.x), std::abs(pos.y - pos1.y)) + 1;
+            if(std::min(std::abs(pos.x - pos1.x), std::abs(pos.y - pos1.y)) <= 1)
+                heuristic_estimate += 1;
+            heuristic_estimate = std::max<double>(heuristic_estimate, std::max(std::abs(pos.x - dest.pos.x),
+                                                                       std::abs(pos.y - dest.pos.y)));
+
+//            if(heuristic_estimate == 1){
+//                if(pos.x == dest.pos.x && pos.y == dest.pos.y && ! is_finished(dest)){
+//                    heuristic_estimate = 4;
+//                }else{
+//                    pos1.move();
+//                    if(pos1 == pos){
+//                        heuristic_estimate = 5;
+//                        goto GUEST_DONE;
+//                    }
+//                    atc::position pos2 = pos1;
+//                    pos2.dir.turn_left();
+//                    if(pos2 == pos){
+
+//                    }
+//                }
+//            }
+            DONE_GUESSING:
             heuristic_estimate = std::max<double>(heuristic_estimate, altitude);
         }
         if(dest.exit == dest.dest_type_){
+            if(atc::direction::is_contary_direction(pos.dir, dest.pos.dir)){
+                heuristic_estimate += 1;
+            }
             heuristic_estimate = std::max<double>(heuristic_estimate, 9 - altitude);
         }
         return *this;
@@ -137,9 +180,9 @@ bool operator< (search_node const & n1, search_node const & n2){
     return n1.score > n2.score;
 }
 struct result_node{
-    atc::position pos;
-    int altitude;
-    int clck;
+    atc::position pos{};
+    int altitude{};
+    int clck{};
     result_node(){}
     result_node(search_node const & sn):pos{sn.pos}, altitude{sn.altitude}, clck{sn.clck}{
     }
@@ -162,6 +205,7 @@ search_result search(atc_utils::frame & f){
         return a.get_fuel() < b.get_fuel();
     });
     for(auto const & plane:planes_by_fuel){
+//        std::cout << plane.get_no() << "\n";
         std::priority_queue<search_node> ns;
         std::unordered_map<int, search_node> ns_record;
         search_node n{plane, f.clck};
@@ -171,6 +215,7 @@ search_result search(atc_utils::frame & f){
         ns_record[n.id] = n;
         while(!ns.empty()){
             search_node n = ns.top();
+//            std::cout << n << "\n";
             ns.pop();
             for(search_node  nn  : n.get_next_nodes()){
                 if(nn.is_valid_altitude(dest) and nn.is_valid_position(map, dest))
@@ -188,6 +233,7 @@ search_result search(atc_utils::frame & f){
                     nn.score += 0.001;
                     nn.distince += 0.001;
                 }
+//                std::cout << nn << "\n";
                 ns.push(nn);
                 ns_record[nn.id] = nn;
                 if(nn.is_finished(dest)){
@@ -205,6 +251,7 @@ search_result search(atc_utils::frame & f){
             }
         }
         finded:;
+//        std::cout << "\n\n";
     }
     return rv;
 }
