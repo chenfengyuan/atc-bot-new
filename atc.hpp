@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <utility>
 #include <functional>
+#include <cassert>
 namespace atc{
 struct direction{
 private:
@@ -123,6 +124,31 @@ public:
         }
         out << "{dir "<< c << " }";
         return out;
+    }
+    char get_char(){
+        char c;
+        switch(code){
+        case direction::w:
+            c = 'w';break;
+        case direction::e:
+            c = 'e';break;
+        case direction::d:
+            c = 'd';break;
+        case direction::c:
+            c = 'c';break;
+        case direction::x:
+            c = 'x';break;
+        case direction::z:
+            c = 'z';break;
+        case direction::a:
+            c = 'a';break;
+        case direction::q:
+            c = 'q';break;
+        default:
+            c = '*';
+            break;
+        }
+        return c;
     }
 };
 bool operator==(direction const &a, direction const &b){
