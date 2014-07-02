@@ -65,7 +65,7 @@ struct search_node{
             return false;
         if(dest.dest_type_ == dest.airport && dest.pos.dir == pos.dir && altitude == 0)
             return true;
-        if(dest.dest_type_ == dest.exit && dest.pos.dir == pos.dir.get_contary_direction() && altitude == 9)
+        if(dest.dest_type_ == dest.exit && altitude == 9)
             return true;
         return false;
     }
@@ -156,6 +156,7 @@ search_result search(atc_utils::frame & f){
     std::vector<atc::plane> planes_by_fuel;
     for(auto const & pair:map.get_planes()){
         planes_by_fuel.push_back(pair.second);
+        map.mark_position(pair.second, f.clck);
     }
     sort(planes_by_fuel.begin(), planes_by_fuel.end(), [](const atc::plane & a, const atc::plane &b){
         return a.get_fuel() < b.get_fuel();

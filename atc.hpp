@@ -396,6 +396,11 @@ public:
         int y = p.get_y();
         assert(is_valid_position(p));
         assert(is_valid_altitude(altitude));
+        if(altitude == 0)
+            return *this;
+        if(x == 0 || x == width - 1 ||
+                y == 0 || y == height - 1)
+            return *this;
         points[get_offset(x,y)][time][altitude] = true;
         return *this;
     }
