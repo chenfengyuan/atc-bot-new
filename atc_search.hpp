@@ -84,6 +84,8 @@ struct search_node{
                 new_node.pos.move();
                 new_node.altitude += da;
                 ns.push_back(new_node);
+                if(this->altitude == 0) // plane can't change direction when in airport
+                    continue;
                 using atc::direction;
                 auto funcs={&direction::turn_hard_left,&direction::turn_hard_right,&direction::turn_left,&direction::turn_right};
                 for(auto func : funcs){
@@ -101,7 +103,7 @@ struct search_node{
     bool is_valid_position(const atc::game_map & map, const atc::dest & dest){
         if(is_finished(dest))
             return true;
-        if(pos.x >= 1 and pos.x < map.get_width() and pos.y >=1 and pos.y < map.get_height())
+        if(pos.x >= 1 and pos.x < map.get_width() - 1 and pos.y >=1 and pos.y < map.get_height() - 1)
             return true;
         return false;
     }
@@ -151,10 +153,16 @@ typedef std::map<int, std::map<int, result_node>> search_result;
 search_result search(atc_utils::frame & f){
     auto & map = f.map;
     search_result rv;
+    std::vector<atc::plane> planes_by_fuel;
     for(auto const & pair:map.get_planes()){
+        planes_by_fuel.push_back(pair.second);
+    }
+    sort(planes_by_fuel.begin(), planes_by_fuel.end(), [](const atc::plane & a, const atc::plane &b){
+        return a.get_fuel() < b.get_fuel();
+    });
+    for(auto const & plane:planes_by_fuel){
         std::priority_queue<search_node> ns;
         std::unordered_map<int, search_node> ns_record;
-        atc::plane const &plane = pair.second;
         search_node n{plane, f.clck};
         atc::dest dest = plane.get_dest();
         n.calculate_heuristic_estimate(dest).calculate_score();
