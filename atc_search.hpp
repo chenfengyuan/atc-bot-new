@@ -15,7 +15,7 @@ struct search_node{
     int altitude;
     int fuel;
     double score;
-    double distince;
+    double distance;
     double heuristic_estimate;
     int id;
     int parent_id;
@@ -23,10 +23,10 @@ struct search_node{
     std::shared_ptr<int> id_series;
     search_node(){}
     search_node(atc::plane const & p, int clck_):pos{p.get_position()},is_jet{p.is_jet_plane()},altitude{p.get_altitude()},
-        fuel{p.get_fuel()}, distince{0}, id{0}, parent_id{0}, clck{clck_}, id_series{new int{}}{
+        fuel{p.get_fuel()}, distance{0}, id{0}, parent_id{0}, clck{clck_}, id_series{new int{}}{
         (*id_series)++;
     }
-    search_node(search_node const &n):pos{n.pos},is_jet{n.is_jet},altitude{n.altitude},fuel{n.fuel},score{n.score},distince{n.distince},
+    search_node(search_node const &n):pos{n.pos},is_jet{n.is_jet},altitude{n.altitude},fuel{n.fuel},score{n.score},distance{n.distance},
             heuristic_estimate{n.heuristic_estimate}, id{n.id}, parent_id{n.parent_id}, clck{n.clck}, id_series{n.id_series}{
     }
     search_node & inherit(){
@@ -34,7 +34,7 @@ struct search_node{
         if(!is_jet && clck % 2 == 1){
         }else{
             fuel--;
-            distince++;
+            distance++;
         }
         parent_id = id;
         id = (*id_series)++;
@@ -64,7 +64,7 @@ struct search_node{
         return *this;
     }
     search_node & calculate_score(){
-        score = 5 * heuristic_estimate + distince;
+        score = 5 * heuristic_estimate + distance;
         return *this;
     }
 
@@ -136,7 +136,7 @@ std::ostream & operator<<(std::ostream & out, search_node const & sn){
     out << "clck(" << sn.clck << ") ";
     out << "altitude(" << sn.altitude << ") ";
     out << "score(" << sn.score << ") ";
-    out << "distince(" << sn.distince << ") ";
+    out << "distince(" << sn.distance << ") ";
     out << "heuristic_estimate(" << sn.heuristic_estimate << ") ";
     out << "id(" << sn.id << ") ";
     out << "parent_id(" << sn.parent_id << ")}";
@@ -216,11 +216,11 @@ search_result search(atc_utils::frame & f){
                 nn.calculate_heuristic_estimate(dest).calculate_score();
                 if(!(nn.pos.dir == n.pos.dir)){
                     nn.score += 0.01;
-                    nn.distince+=0.01;
+                    nn.distance+=0.01;
                 }
                 if(!(nn.altitude == n.altitude)){
                     nn.score += 0.001;
-                    nn.distince += 0.001;
+                    nn.distance += 0.001;
                 }
 //                std::cout << nn << "\n";
                 bool banned = false;
