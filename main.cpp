@@ -132,7 +132,7 @@ TEST(atc, search_node){
     atc_search::search_node node1(atc::plane(atc::position(0,0, atc::direction::c), 1, 0, 2, airport0, 100), 0);
     node1.calculate_heuristic_estimate(airport0);
     EXPECT_EQ(node1.is_finished(airport0), false);
-    EXPECT_EQ(node1.heuristic_estimate, 7);
+    EXPECT_EQ(node1.heuristic_estimate, 8);
     node1.calculate_heuristic_estimate(exit0);
     EXPECT_EQ(node1.is_finished(exit0), false);
     EXPECT_EQ(node1.heuristic_estimate, 7);

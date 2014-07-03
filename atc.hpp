@@ -199,8 +199,11 @@ struct position{
         return *this;
     }
 
-    friend int get_distance(position const &p1, position const &p2){
-        return std::abs(p1.x - p2.x) + std::abs(p1.y - p2.y);
+    static int get_distance(position const &p1, position const &p2){
+        int tmp = std::max(std::abs(p1.x - p2.x), std::abs(p1.y - p2.y));
+        if(p1.dir.get_contary_direction() == p2.dir)
+            tmp++;
+        return tmp;
     }
     friend std::ostream & operator<<(std::ostream & out, position const & pos){
         out << "{position " << pos.x << ", " << pos.y << ", " << pos.dir << " }";
