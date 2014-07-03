@@ -6,6 +6,7 @@
 #include <queue>
 #include <algorithm>
 #include <memory>
+#include <thread>
 namespace atc_search{
 struct search_node{
     atc::position pos;
@@ -43,24 +44,32 @@ struct search_node{
         if(dest.airport == dest.dest_type_){
             //heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x), std::abs(pos.y - dest.pos.y));
             atc::position pos1 = dest.pos;
-            pos1.dir = pos1.dir.get_contary_direction();
+            atc::position pos2, pos3;
             if(pos1.x == pos.x and pos1.y == pos.y){
                 heuristic_estimate = 4;
                 goto DONE_GUESSING;
             }
+            pos1.dir = pos1.dir.get_contary_direction();
             pos1.move();
-            if(pos.x == pos1.x and pos.y == pos1.y and atc::direction::direction_distance(pos.dir, pos1.dir)>2){
+            if(pos.x == pos1.x and pos.y == pos1.y and atc::direction::direction_distance(pos.dir, pos1.dir)<2){
                 heuristic_estimate = 5;
                 goto DONE_GUESSING;
             }
-            if((pos.x == dest.pos.x) && std::abs(pos.y - dest.pos.y) == 1){
-                if(atc::direction::direction_distance(pos.dir, dest.pos.dir) >= 2)
-                    heuristic_estimate = 4;
-                else if(atc::direction::direction_distance(pos.dir, dest.pos.dir) == 1)
-                    heuristic_estimate = 4;
-                else
-                    heuristic_estimate = 5;
-                goto DONE_GUESSING;
+            pos2=pos3=dest.pos;
+            pos2.dir.turn_hard_left();
+            pos2.move();
+            pos3.dir.turn_hard_right();
+            pos3.move();
+            for(atc::position const & pos4 : {pos2, pos3}){
+                if((pos.x == pos4.x) && pos.y == pos4.y){
+                    if(atc::direction::direction_distance(pos.dir, dest.pos.dir) >= 2)
+                        heuristic_estimate = 4;
+                    else if(atc::direction::direction_distance(pos.dir, dest.pos.dir) == 1)
+                        heuristic_estimate = 4;
+                    else
+                        heuristic_estimate = 5;
+                    goto DONE_GUESSING;
+                }
             }
 
             heuristic_estimate = std::max(std::abs(pos.x - pos1.x), std::abs(pos.y - pos1.y)) + 1;
@@ -89,6 +98,8 @@ struct search_node{
             heuristic_estimate = std::max<double>(heuristic_estimate, altitude);
         }
         if(dest.exit == dest.dest_type_){
+            heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x),
+                                          std::abs(pos.y - dest.pos.y));
             if(atc::direction::is_contary_direction(pos.dir, dest.pos.dir)){
                 heuristic_estimate += 1;
             }
@@ -214,6 +225,12 @@ search_result search(atc_utils::frame & f){
         ns.push(n);
         ns_record[n.id] = n;
         while(!ns.empty()){
+            if(ns.size() > 100000){
+                std::cout << "no solution\n";
+                std::chrono::milliseconds dura( 200000 );
+                std::this_thread::sleep_for( dura );
+                break;
+            }
             search_node n = ns.top();
 //            std::cout << n << "\n";
             ns.pop();

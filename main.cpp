@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 #include "rapidjson/document.h"
 #include "atc.hpp"
@@ -140,9 +141,25 @@ TEST(atc, search){
     const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n1 0 12 5 9 1 2 50 5\n\n"})json";
     // two plane aiport
     data = R"json({"update_time": 1404293195.5471077, "data": "30 21 1\n4 29 7 6 29 17 6 0 7 2 0 0 3 \n1 20 18 2 \n3337\n11 0 27 17 7 0 3 49 6\n13 1 29 7 7 0 3 51 6\n\n"})json";
+    {
+        atc_utils::frame fm = atc_utils::read_status(data);
+        EXPECT_EQ(atc_search::search(fm).size(), 2);
+    }
     data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 6 7 2 3 45 4\n1 0 23 4 0 2 3 51 6\n\n"})json";
-    data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 8 1 2 3 45 2\n\n"})json";
-    atc_utils::frame fm = atc_utils::read_status(data);
+    {
+        atc_utils::frame fm = atc_utils::read_status(data);
+        EXPECT_EQ(atc_search::search(fm).size(), 1);
+    }
+    data = R"json({"update_time": 1404317726.3879964, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n7\n6 0 10 2 1 1 3 51 2\n\n"})json";
+    {
+        atc_utils::frame fm = atc_utils::read_status(data);
+        EXPECT_EQ(atc_search::search(fm).size(), 1);
+    }
+    data = R"json({"update_time": 1404351974.9621122, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n47\n0 1 11 4 3 3 3 45 2\n1 1 10 12 1 2 3 46 2\n2 0 23 9 2 3 3 41 3\n3 0 15 12 3 2 3 41 2\n4 1 23 9 4 3 3 32 3\n6 0 23 16 1 5 3 50 6\n8 0 14 14 1 3 3 49 2\n9 1 16 4 5 0 2 39 7\n10 1 19 9 1 1 3 37 1\n11 0 22 5 2 3 3 49 4\n12 0 12 7 1 1 2 35 5\n13 0 11 4 1 1 3 45 2\n15 0 23 11 1 6 3 46 5\n17 0 20 13 1 4 3 36 1\n18 1 9 10 7 2 3 42 2\n19 0 26 11 1 2 3 49 4\n20 0 15 4 1 1 2 38 5\n21 1 13 3 7 6 3 48 4\n22 0 17 2 1 1 2 40 5\n23 0 19 4 3 0 2 47 6\n24 1 17 16 1 6 3 44 6\n25 0 25 8 3 3 3 42 2\n5 1 23 4 0 2 3 51 6\n7 1 25 10 0 1 2 51 2\n14 0 25 10 0 1 3 51 2\n16 0 6 13 0 2 3 51 0\n\n"})json";
+    std::ifstream file{"test"};
+    std::string data_string;
+    std::getline(file, data_string);
+    atc_utils::frame fm = atc_utils::read_status(data_string.c_str());
     fm.map.mark_position(atc::position(20,15,0),22,1);
     std::cout << fm;
     for(auto & pair : atc_search::search(fm)){
