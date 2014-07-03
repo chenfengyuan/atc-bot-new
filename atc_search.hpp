@@ -47,44 +47,10 @@ struct search_node{
             // 30>
             // 21
             atc::position pos_tmp = dest.pos;
-            pos_tmp.move().move();
-            if(pos_tmp.x == pos.x and pos_tmp.y == pos.y){
-                heuristic_estimate = 5;
-                goto DONE_GUESSING;
-            }
-            if(pos.x == dest.pos.x && pos.y == dest.pos.y){
-                heuristic_estimate = 4;
-                goto DONE_GUESSING;
-            }else{
-                atc::position pos0 = dest.pos;
-                pos0.dir = pos0.dir.get_contary_direction();
-                pos0.move();
-                using atc::direction;
-                std::vector<atc::position> ps{pos0};
-                auto funcs={&direction::turn_hard_left,&direction::turn_hard_right,&direction::turn_left,&direction::turn_right};
-                for(auto & func : funcs){
-                    atc::position pt = pos0;
-                    ((&pt.dir)->*func)();
-                    pt.move();
-                    ps.push_back(pt);
-                }
-                heuristic_estimate = std::numeric_limits<int>::max();
-                for(atc::position & pos_n : ps){
-                    if(pos_n.x == pos.x && pos_n.y == pos.y){
-                        if(atc::direction::direction_distance(pos_n.dir, pos.dir) <= 1){
-                            heuristic_estimate = 5;
-                            goto DONE_GUESSING;
-                        }else{
-                            heuristic_estimate = atc::position::get_distance(pos_n, pos0) + 1;
-                            goto DONE_GUESSING;
-                        }
-                    }
-                    heuristic_estimate = std::min<double>(heuristic_estimate,
-                                                  atc::position::get_distance(pos_n, pos) + 2);
-                }
-            }
-
-            DONE_GUESSING:
+            pos_tmp.dir = pos_tmp.dir.get_contary_direction();
+            pos_tmp.move();
+            heuristic_estimate = std::max(std::abs(pos.x - pos_tmp.x),
+                                          std::abs(pos.y - pos_tmp.y)) + 1;
             heuristic_estimate = std::max<double>(heuristic_estimate, altitude);
         }
         if(dest.exit == dest.dest_type_){
@@ -214,7 +180,11 @@ search_result search(atc_utils::frame & f){
         n.calculate_heuristic_estimate(dest).calculate_score();
         ns.push(n);
         ns_record[n.id] = n;
+        std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, bool>>>> uniq_node;
         while(!ns.empty()){
+            if(plane.get_altitude() == 0 && ns.size() > 10000){
+                goto finded;
+            }
             if(ns.size() > 100000){
                 std::cout << "no solution\n";
                 std::chrono::milliseconds dura( 200000 );
@@ -225,6 +195,18 @@ search_result search(atc_utils::frame & f){
 //            std::cout << "\n" << n << "\n\n";
             ns.pop();
             for(search_node  nn  : n.get_next_nodes()){
+                if(nn.fuel == 1)
+                    continue;
+                {
+                    int offset = map.get_offset(nn.pos.x, nn.pos.y);
+                    int dir = nn.pos.dir.get_code();
+                    int altitude = nn.altitude;
+                    int clck = nn.clck;
+                    if(uniq_node[offset][dir][altitude][clck])
+                        continue;
+                    else
+                        uniq_node[offset][dir][altitude][clck] = true;
+                }
                 if(nn.is_valid_altitude(dest) and nn.is_valid_position(map, dest))
                     ;
                 else
@@ -241,7 +223,14 @@ search_result search(atc_utils::frame & f){
                     nn.distince += 0.001;
                 }
 //                std::cout << nn << "\n";
-                ns.push(nn);
+                bool banned = false;
+                if(dest.dest_type_ == dest.airport && nn.pos.is_in_front_of(dest.pos)){
+                    if(std::max(std::abs(nn.pos.x - dest.pos.x),std::abs(nn.pos.y - dest.pos.y)) <= 1){
+                        banned = true;
+                    }
+                }
+                if(!banned)
+                    ns.push(nn);
                 ns_record[nn.id] = nn;
                 if(nn.is_finished(dest)){
                     search_result::value_type::second_type rns;

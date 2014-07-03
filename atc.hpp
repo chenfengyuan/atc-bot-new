@@ -12,6 +12,7 @@
 #include <utility>
 #include <functional>
 #include <cassert>
+#include <cmath>
 namespace atc{
 struct direction{
 private:
@@ -205,6 +206,20 @@ struct position{
             tmp++;
         return tmp;
     }
+    bool is_in_front_of(position const & p){
+        switch(p.dir.get_code()){
+        case direction::w:
+            return y <= p.y;
+        case direction::d:
+            return x >= p.x;
+        case direction::x:
+            return y >= p.y;
+        case direction::a:
+            return x <= p.x;
+        }
+        return false;
+    }
+
     friend std::ostream & operator<<(std::ostream & out, position const & pos){
         out << "{position " << pos.x << ", " << pos.y << ", " << pos.dir << " }";
         return out;
