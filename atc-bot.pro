@@ -8,6 +8,9 @@ SOURCES += main.cpp
 INCLUDEPATH += ./include/
 QMAKE_CXXFLAGS += -O2 -g -Wall -Wextra -isystem ./include --save-temps
 LIBS += -L. -lgtest
+linux{
+    LIBS += -lpthread
+}
 
 HEADERS += \
     atc.hpp \
