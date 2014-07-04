@@ -157,17 +157,27 @@ TEST(atc, search){
         atc_utils::frame fm = atc_utils::read_status(data);
         EXPECT_EQ(atc_search::search(fm).size(), 2);
     }
-    std::ifstream file{"test"};
-    std::string data_string;
-    std::getline(file, data_string);
-    atc_utils::frame fm = atc_utils::read_status(data_string.c_str());
-    fm.map.mark_position(atc::position(20,15,0),22,1);
-    std::cout << fm;
-    for(auto & pair : atc_search::search(fm)){
-        std::cout << pair.first << "\n";
-        for(auto & pair2 : pair.second){
-            std::cout << pair2.second << "\n";
+    data = R"json({"data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n3727\n0 0 6 12 1 4 3 50 0\n1 0 15 14 1 5 3 38 7\n3 0 24 8 1 5 3 47 7\n5 0 12 11 1 1 2 39 7\n6 0 10 7 3 5 3 46 3\n7 0 19 6 1 1 2 50 0\n8 0 13 10 3 5 3 41 2\n9 1 26 9 1 5 3 49 0\n10 0 17 4 1 1 3 39 2\n11 0 24 10 1 3 3 44 1\n12 0 11 13 1 2 3 45 3\n13 0 21 8 1 0 2 42 7\n15 0 21 3 1 1 3 35 1\n16 0 14 15 3 5 3 42 2\n17 1 10 11 2 1 3 46 1\n18 0 5 7 2 0 3 42 4\n19 1 12 6 1 3 3 43 1\n20 1 12 12 3 5 3 40 6\n21 0 12 1 8 0 2 35 1\n22 1 10 10 7 1 3 41 2\n23 0 12 4 1 1 3 44 2\n24 0 9 3 3 1 2 37 5\n25 0 20 14 3 3 3 43 1\n2 0 6 5 0 5 3 51 0\n14 1 23 4 0 5 3 51 6\n\n", "update_time": 1404396378.937879})json";
+    {
+        atc_utils::frame fm = atc_utils::read_status(data);
+        EXPECT_EQ(atc_search::search(fm).size(), 25);
+    }
+    if(0){
+        std::ifstream file{"test"};
+        std::string data_string;
+        std::getline(file, data_string);
+        atc_utils::frame fm = atc_utils::read_status(data_string.c_str());
+        fm.map.mark_position(atc::position(20,15,0),22,1);
+        std::cout << fm;
+        int n = 0;
+        for(auto & pair : atc_search::search(fm)){
+            n++;
+            std::cout << pair.first << "\n";
+            for(auto & pair2 : pair.second){
+                std::cout << pair2.second << "\n";
+            }
         }
+        std::cout << n << "\n";
     }
 }
 

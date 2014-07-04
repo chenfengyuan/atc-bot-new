@@ -51,7 +51,9 @@ struct search_node{
             pos_tmp.move();
             heuristic_estimate = std::max(std::abs(pos.x - pos_tmp.x),
                                           std::abs(pos.y - pos_tmp.y)) + 1;
-            heuristic_estimate = std::max<double>(heuristic_estimate, altitude);
+            if(altitude > heuristic_estimate)
+                heuristic_estimate = altitude + 3;
+            //heuristic_estimate = std::max<double>(heuristic_estimate, altitude);
         }
         if(dest.exit == dest.dest_type_){
             heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x),
@@ -171,8 +173,11 @@ search_result search(atc_utils::frame & f){
     sort(planes_by_fuel.begin(), planes_by_fuel.end(), [](const atc::plane & a, const atc::plane &b){
         return a.get_fuel() < b.get_fuel();
     });
+//    const int debug = true;
+    const int debug = false;
     for(auto const & plane:planes_by_fuel){
-//        std::cout << plane.get_no() << "\n";
+        if(debug)
+            std::cout << plane.get_no() << "\n";
         std::priority_queue<search_node> ns;
         std::unordered_map<int, search_node> ns_record;
         search_node n{plane, f.clck};
@@ -182,17 +187,18 @@ search_result search(atc_utils::frame & f){
         ns_record[n.id] = n;
         std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, std::unordered_map<int, bool>>>> uniq_node;
         while(!ns.empty()){
-            if(plane.get_altitude() == 0 && ns.size() > 10000){
+            if(plane.get_altitude() == 0 && ns_record.size() > 42000){
                 goto finded;
             }
-            if(ns.size() > 100000){
+            if(ns_record.size() > 100000){
                 std::cout << "no solution\n";
                 std::chrono::milliseconds dura( 200000 );
                 std::this_thread::sleep_for( dura );
                 break;
             }
             search_node n = ns.top();
-//            std::cout << "\n" << n << "\n\n";
+            if(debug)
+                std::cout << "\n" << n << "\n\n";
             ns.pop();
             for(search_node  nn  : n.get_next_nodes()){
                 if(nn.fuel == 1)
@@ -222,7 +228,6 @@ search_result search(atc_utils::frame & f){
                     nn.score += 0.001;
                     nn.distance += 0.001;
                 }
-//                std::cout << nn << "\n";
                 bool banned = false;
                 if(dest.dest_type_ == dest.airport && nn.pos.is_in_front_of(dest.pos)){
                     if(std::max(std::abs(nn.pos.x - dest.pos.x),std::abs(nn.pos.y - dest.pos.y)) <= 1){
@@ -231,8 +236,12 @@ search_result search(atc_utils::frame & f){
                 }
                 if(!banned)
                     ns.push(nn);
+                if(debug && !banned)
+                    std::cout << nn << "\n";
                 ns_record[nn.id] = nn;
                 if(nn.is_finished(dest)){
+                    if(debug)
+                        std::cout << "nodes " << ns_record.size() << "\n";
                     search_result::value_type::second_type rns;
                     while(true){
                         rns[nn.clck] = nn;
@@ -247,7 +256,8 @@ search_result search(atc_utils::frame & f){
             }
         }
         finded:;
-//        std::cout << "\n\n";
+        if(debug)
+            std::cout << "\n\n";
     }
     return rv;
 }
