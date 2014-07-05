@@ -137,31 +137,6 @@ TEST(atc, search_node){
 TEST(atc, search){
     const char * data = R"json({"update_time": 1404197019.1171052, "data": "30 21 5\n8 12 0 4 29 0 5 29 7 6 29 17 6 9 20 1 0 13 2 0 7 2 0 0 3 \n2 20 15 0 20 18 2 \n2\n0 0 12 5 7 1 2 50 5\n1 0 12 5 9 1 2 50 5\n\n"})json";
     // two plane aiport
-    data = R"json({"update_time": 1404293195.5471077, "data": "30 21 1\n4 29 7 6 29 17 6 0 7 2 0 0 3 \n1 20 18 2 \n3337\n11 0 27 17 7 0 3 49 6\n13 1 29 7 7 0 3 51 6\n\n"})json";
-    {
-        atc_utils::frame fm = atc_utils::read_status(data);
-        EXPECT_EQ(atc_search::search(fm).size(), 2);
-    }
-    data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 6 7 2 3 45 4\n1 0 23 4 0 2 3 51 6\n\n"})json";
-    {
-        atc_utils::frame fm = atc_utils::read_status(data);
-        EXPECT_EQ(atc_search::search(fm).size(), 1);
-    }
-    data = R"json({"update_time": 1404317726.3879964, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n7\n6 0 10 2 1 1 3 51 2\n\n"})json";
-    {
-        atc_utils::frame fm = atc_utils::read_status(data);
-        EXPECT_EQ(atc_search::search(fm).size(), 1);
-    }
-    data = R"json({"update_time": 1404377498.9706728, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n204\n5 0 14 1 7 1 3 50 3\n6 1 6 5 0 1 3 51 0\n\n"})json";
-    {
-        atc_utils::frame fm = atc_utils::read_status(data);
-        EXPECT_EQ(atc_search::search(fm).size(), 2);
-    }
-    data = R"json({"data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n3727\n0 0 6 12 1 4 3 50 0\n1 0 15 14 1 5 3 38 7\n3 0 24 8 1 5 3 47 7\n5 0 12 11 1 1 2 39 7\n6 0 10 7 3 5 3 46 3\n7 0 19 6 1 1 2 50 0\n8 0 13 10 3 5 3 41 2\n9 1 26 9 1 5 3 49 0\n10 0 17 4 1 1 3 39 2\n11 0 24 10 1 3 3 44 1\n12 0 11 13 1 2 3 45 3\n13 0 21 8 1 0 2 42 7\n15 0 21 3 1 1 3 35 1\n16 0 14 15 3 5 3 42 2\n17 1 10 11 2 1 3 46 1\n18 0 5 7 2 0 3 42 4\n19 1 12 6 1 3 3 43 1\n20 1 12 12 3 5 3 40 6\n21 0 12 1 8 0 2 35 1\n22 1 10 10 7 1 3 41 2\n23 0 12 4 1 1 3 44 2\n24 0 9 3 3 1 2 37 5\n25 0 20 14 3 3 3 43 1\n2 0 6 5 0 5 3 51 0\n14 1 23 4 0 5 3 51 6\n\n", "update_time": 1404396378.937879})json";
-    {
-        atc_utils::frame fm = atc_utils::read_status(data);
-        EXPECT_EQ(atc_search::search(fm).size(), 25);
-    }
     if(0){
         std::ifstream file{"test"};
         std::string data_string;
@@ -178,6 +153,32 @@ TEST(atc, search){
             }
         }
         std::cout << n << "\n";
+    }else{
+        data = R"json({"update_time": 1404293195.5471077, "data": "30 21 1\n4 29 7 6 29 17 6 0 7 2 0 0 3 \n1 20 18 2 \n3337\n11 0 27 17 7 0 3 49 6\n13 1 29 7 7 0 3 51 6\n\n"})json";
+        {
+            atc_utils::frame fm = atc_utils::read_status(data);
+            EXPECT_EQ(atc_search::search(fm).size(), 2);
+        }
+        data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 6 7 2 3 45 4\n1 0 23 4 0 2 3 51 6\n\n"})json";
+        {
+            atc_utils::frame fm = atc_utils::read_status(data);
+            EXPECT_EQ(atc_search::search(fm).size(), 1);
+        }
+        data = R"json({"update_time": 1404317726.3879964, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n7\n6 0 10 2 1 1 3 51 2\n\n"})json";
+        {
+            atc_utils::frame fm = atc_utils::read_status(data);
+            EXPECT_EQ(atc_search::search(fm).size(), 1);
+        }
+        data = R"json({"update_time": 1404377498.9706728, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n204\n5 0 14 1 7 1 3 50 3\n6 1 6 5 0 1 3 51 0\n\n"})json";
+        {
+            atc_utils::frame fm = atc_utils::read_status(data);
+            EXPECT_EQ(atc_search::search(fm).size(), 2);
+        }
+        data = R"json({"data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n3727\n0 0 6 12 1 4 3 50 0\n1 0 15 14 1 5 3 38 7\n3 0 24 8 1 5 3 47 7\n5 0 12 11 1 1 2 39 7\n6 0 10 7 3 5 3 46 3\n7 0 19 6 1 1 2 50 0\n8 0 13 10 3 5 3 41 2\n9 1 26 9 1 5 3 49 0\n10 0 17 4 1 1 3 39 2\n11 0 24 10 1 3 3 44 1\n12 0 11 13 1 2 3 45 3\n13 0 21 8 1 0 2 42 7\n15 0 21 3 1 1 3 35 1\n16 0 14 15 3 5 3 42 2\n17 1 10 11 2 1 3 46 1\n18 0 5 7 2 0 3 42 4\n19 1 12 6 1 3 3 43 1\n20 1 12 12 3 5 3 40 6\n21 0 12 1 8 0 2 35 1\n22 1 10 10 7 1 3 41 2\n23 0 12 4 1 1 3 44 2\n24 0 9 3 3 1 2 37 5\n25 0 20 14 3 3 3 43 1\n2 0 6 5 0 5 3 51 0\n14 1 23 4 0 5 3 51 6\n\n", "update_time": 1404396378.937879})json";
+        {
+            atc_utils::frame fm = atc_utils::read_status(data);
+            EXPECT_EQ(atc_search::search(fm).size(), 25);
+        }
     }
 }
 

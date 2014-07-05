@@ -58,7 +58,9 @@ struct search_node{
         if(dest.exit == dest.dest_type_){
             heuristic_estimate = std::max(std::abs(pos.x - dest.pos.x),
                                           std::abs(pos.y - dest.pos.y));
-            if(atc::direction::is_contary_direction(pos.dir, dest.pos.dir)){
+            if(heuristic_estimate <= 10 and altitude != 9)
+                heuristic_estimate += 0.1 * (9- altitude);
+            if(pos.dir == dest.pos.dir){
                 heuristic_estimate += 1;
             }
             heuristic_estimate = std::max<double>(heuristic_estimate, 9 - altitude);
@@ -217,6 +219,11 @@ search_result search(atc_utils::frame & f){
                     ;
                 else
                     continue;
+                if(nn.altitude <=8 and nn.altitude >=6 and nn.fuel < map.get_width() + map.get_height() - 7){
+                    if(nn.pos.x <= 2 || nn.pos.x >= map.get_width() - 4 ||
+                            nn.pos.y <= 2 || nn.pos.y >= map.get_height() - 4)
+                        continue;
+                }
                 if(!map.is_safe(nn.pos, nn.clck, nn.altitude))
                     continue;
                 nn.calculate_heuristic_estimate(dest).calculate_score();
