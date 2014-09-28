@@ -88,8 +88,8 @@ TEST(atc, gamemap){
     EXPECT_EQ(gm.get_exit(0), d);
     gm.mark_position(atc::position(5,5,0), 10, 5);
     EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 9, 5));
-    EXPECT_EQ(false, gm.is_safe(atc::position(4,4), 10, 5));
-    EXPECT_EQ(false, gm.is_safe(atc::position(5,6), 10, 5));
+    EXPECT_EQ(true, !gm.is_safe(atc::position(4,4), 10, 5));
+    EXPECT_EQ(true, !gm.is_safe(atc::position(5,6), 10, 5));
     EXPECT_EQ(true, gm.is_safe(atc::position(5,7), 10, 5));
     EXPECT_EQ(true, gm.is_safe(atc::position(5,5), 10, 3));
 }
@@ -162,7 +162,7 @@ TEST(atc, search){
         data = R"json({"update_time": 1404311151.5923011, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n6\n0 1 13 6 7 2 3 45 4\n1 0 23 4 0 2 3 51 6\n\n"})json";
         {
             atc_utils::frame fm = atc_utils::read_status(data);
-            EXPECT_EQ(atc_search::search(fm).size(), 1);
+            EXPECT_EQ(atc_search::search(fm).size(), 2);
         }
         data = R"json({"update_time": 1404317726.3879964, "data": "30 21 1\n2 13 0 4 0 10 2 \n7 6 5 0 23 4 6 19 7 0 25 10 2 24 16 6 13 13 4 6 13 0 \n7\n6 0 10 2 1 1 3 51 2\n\n"})json";
         {

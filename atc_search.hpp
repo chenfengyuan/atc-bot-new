@@ -175,9 +175,11 @@ search_result search(atc_utils::frame & f){
     sort(planes_by_fuel.begin(), planes_by_fuel.end(), [](const atc::plane & a, const atc::plane &b){
         return a.get_fuel() < b.get_fuel();
     });
-//    const int debug = true;
-    const int debug = false;
+//    int debug = true;
+    int debug = false;
     for(auto const & plane:planes_by_fuel){
+//        if(plane.get_no() == 3)
+//            debug = true;
         if(debug)
             std::cout << plane.get_no() << "\n";
         std::priority_queue<search_node> ns;
@@ -215,10 +217,12 @@ search_result search(atc_utils::frame & f){
                     else
                         uniq_node[offset][dir][altitude][clck] = true;
                 }
-                if(nn.is_valid_altitude(dest) and nn.is_valid_position(map, dest))
-                    ;
-                else
-                    continue;
+                if(nn.fuel != map.get_width() + map.get_height()){
+                    if(nn.is_valid_altitude(dest) and nn.is_valid_position(map, dest))
+                        ;
+                    else
+                        continue;
+                }
                 if(nn.altitude <=8 and nn.altitude >=6 and nn.fuel < map.get_width() + map.get_height() - 7){
                     if(nn.pos.x <= 2 || nn.pos.x >= map.get_width() - 4 ||
                             nn.pos.y <= 2 || nn.pos.y >= map.get_height() - 4)
